@@ -13,6 +13,7 @@ ext.javaLintArgs = [
 ]
 
 application {
+    mainModule = [rootProject.group, name].join('.')
     mainClass = [rootProject.group, name, 'Application'].join('.')
 }
 

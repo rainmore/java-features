@@ -26,6 +26,7 @@ allprojects {
 subprojects {
     plugins.withType(JavaPlugin).configureEach {
         java {
+            modularity.inferModulePath = true
             sourceCompatibility = JavaVersion.VERSION_11
             targetCompatibility = JavaVersion.VERSION_11
         }
