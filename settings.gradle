@@ -1,3 +1,4 @@
 rootProject.name = 'java-features'
 include 'elements'
-include 'app'
+include 'core'
+include 'api'

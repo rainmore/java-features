@@ -1,0 +1,91 @@
+apply plugin: 'idea'
+apply plugin: 'java-library'
+apply plugin: 'application'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'com.bmuschko.docker-spring-boot-application'
+
+ext.javaLintArgs = [
+    '-Xlint:all',
+    '-Xlint:-deprecation',
+    '-Xlint:-path',
+    '-Xlint:-serial'
+]
+
+application {
+    mainClass = [rootProject.group, name, 'Application'].join('.')
+}
+
+dependencies {
+//    implementation project(':elements')
+    implementation project(':core')
+
+    implementation('org.springframework.boot:spring-boot-autoconfigure')
+//    implementation('org.springframework.boot:spring-boot-starter-data-rest')
+    implementation('org.springframework.boot:spring-boot-starter-data-jpa')
+    implementation('org.springframework.boot:spring-boot-starter-thymeleaf')
+    implementation('org.springframework.boot:spring-boot-starter-web')
+    implementation('org.springframework.boot:spring-boot-starter-tomcat')
+
+    runtime('com.h2database:h2:1.4.200')
+    runtime('org.springframework.boot:spring-boot-devtools')
+    testImplementation('org.springframework.boot:spring-boot-starter-test')
+}
+
+// debug
+bootRun {
+    shouldRunAfter clean, processResources
+    jvmArgs += "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"
+    environment.SPRING_PROFILES_ACTIVE = 'dev'
+}
+
+jar {
+    enabled = true
+}
+
+bootJar {
+    archiveClassifier = 'boot'
+}
+
+def composeImageName(String namespace, String name, String tag) {
+    return namespace + '/' + name + ':' + tag
+}
+
+docker {
+    if (project.hasProperty('docker.default.engine.url')) {
+        url = project.ext.get('docker.default.engine.url')
+    }
+
+    if (project.hasProperty('docker.default.cert.path')) {
+        certPath = new File(project.ext.get('docker.default.cert.path'))
+    }
+
+    registryCredentials {
+        username = project.ext.get('docker.default.publish.credentials.username')
+        password = project.ext.get('docker.default.publish.credentials.password')
+    }
+
+    springBootApplication {
+        baseImage = project.ext.get('docker.baseImage')
+        ports = [8080]
+        images = [composeImageName(
+            project.ext.get('docker.default.image.namespace'),
+            rootProject.name,
+            rootProject.version)]
+    }
+}
+
+dockerCreateDockerfile {
+    label(['vendor': project.ext.get('docker.default.image.label.vendor')])
+}
+
+task upload {
+    group 'Publish'
+    dependsOn dockerPushImage
+}
+
+task release {
+    group 'Publish'
+    dependsOn dockerPushImage
+}
+
