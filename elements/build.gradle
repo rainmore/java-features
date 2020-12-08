@@ -1,19 +1,41 @@
 apply plugin: 'idea'
 apply plugin: 'java-library'
+apply plugin: 'kotlin'
+apply plugin: 'org.jetbrains.kotlin.plugin.spring'
+apply plugin: 'org.jetbrains.kotlin.plugin.jpa'
+apply plugin: 'org.jetbrains.kotlin.plugin.noarg'
+apply plugin: 'org.jetbrains.kotlin.plugin.allopen'
+apply plugin: 'org.jetbrains.kotlin.kapt'
 
-ext.javaLintArgs = [
-    '-Xlint:all',
-    '-Xlint:-deprecation',
-    '-Xlint:-path',
-    '-Xlint:-serial'
-]
+compileKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ["-Xjsr305=strict"]
+        jvmTarget = "11"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ["-Xjsr305=strict"]
+        jvmTarget = "11"
+    }
+}
+
 
 configurations {
     all*.exclude group: 'org.apache.logging.log4j'
 }
 
+allOpen {
+    annotation("javax.persistence.Entity")
+    annotation("javax.persistence.MappedSuperclass")
+    annotation("javax.persistence.Embeddable")
+}
+
 dependencies {
-    annotationProcessor group: 'com.querydsl', name: 'querydsl-apt',   version: project.ext.get('querydsl.version'), classifier: 'jpa'
+    implementation  group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib',   version: project.ext.get('kotlin.version')
+    implementation  group: 'org.jetbrains.kotlin', name: 'kotlin-reflect',       version: project.ext.get('kotlin.version')
+
+    kapt     group: 'com.querydsl', name: 'querydsl-apt',   version: project.ext.get('querydsl.version'), classifier: 'jpa'
     annotationProcessor group: 'org.hibernate.javax.persistence', name: 'hibernate-jpa-2.1-api', version: '1.0.2.Final'
     annotationProcessor group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
 
